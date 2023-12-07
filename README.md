@@ -10,13 +10,33 @@ and install them if they are missing. You do not need to manually install them.
 
 - [Steghide](http://steghide.sourceforge.net/)
 - [Outguess](https://github.com/outguess/outguess)
+- [Stegseek](https://github.com/RickdeJager/stegseek)
 
 ## Usage
 
 ```
-./stegtool.sh <image_file> [password]
+./stegtool.sh <image_file> [password] [wordlist.txt]
+```
+<image_file>: Path to the image file from which data will be extracted.<br>
+[password]: Optional password for extracting data using steghide and outguess.<br>
+[wordlist.txt]: Optional wordlist file for extracting data using stegseek. Required only when using stegseek.<br>
+
+## Examples 
+
+1. Extracting data using steghide:
+```
+./extract_data.sh image.jpg mypassword
 ```
 
+2. Extracting data using outguess:
+```
+./extract_data.sh image.jpg mypassword
+```
+
+3. Extracting data using stegseek:
+```
+./extract_data.sh image.jpg '' wordlist.txt
+```
 ## Project Status
 This project is still ongoing.
 
