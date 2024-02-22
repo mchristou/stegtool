@@ -1,117 +1,81 @@
 #!/bin/bash
 
 command_exists() {
-	command -v "$1" >/dev/null 2>&1
+    command -v "$1" >/dev/null 2>&1 || dpkg -l | grep "$1" >/dev/null 2>&1
 }
+
+declare -A package_install_commands=(
+    [apt-get]="sudo apt-get install -y"
+)
 
 install_command() {
-	local command_name="$1"
-	if ! command_exists "$command_name"; then
-		echo "Installing $command_name..."
-		if [[ "$command_name" == "steghide" ]]; then
-			sudo apt-get install steghide
-		elif [[ "$command_name" == "outguess" ]]; then
-			sudo apt-get install outguess
-		elif [[ "$command_name" == "stegseek" ]]; then
-			sudo apt-get install stegseek
-		else
-			echo "Unsupported tool: $command_name"
-			exit 1
-		fi
-	fi
+    local command_name="$1"
+    if ! command_exists "$command_name"; then
+        echo "Installing $command_name..."
+        for pm in "${!package_install_commands[@]}"; do
+            if command_exists "$pm"; then
+                ${package_install_commands[$pm]} "$command_name"
+                return
+            fi
+        done
+        echo "Package manager not supported or $command_name cannot be installed."
+        exit 1
+    fi
 }
 
-extract_data_with_steghide() {
-	local image_file="$1"
-	local password="$2"
+extract_data() {
+    local tool="$1"
+    shift
+    local args=("$@")
 
-	steghide extract -sf "$image_file" -p "$password"
-	if [ $? -eq 0 ]; then
-		echo "Data extracted successfully using steghide."
-		return 0
-	else
-		echo "Data extraction using steghide with the provided password unsuccessful. Trying outguess..."
-		extract_data_with_outguess "$image_file" "$password"
-		return $?
-	fi
+    echo "Attempting data extraction with $tool..."
+    if "$tool" "${args[@]}"; then
+        echo "Data extracted successfully using $tool."
+        return 0
+    else
+        echo "Data extraction with $tool failed."
+        return 1
+    fi
 }
 
-extract_data_with_outguess() {
-	local image_file="$1"
-	local password="$2"
+main() {
+    if [[ "$1" == "-h" || "$1" == "--help" ]]; then
+        echo "Usage: $0 <image_file> [password] [wordlist.txt]"
+        exit 0
+    fi
 
-	if [ -n "$password" ]; then
-		outguess -k "$password" -r "$image_file"
-	else
-		outguess -r "$image_file"
-	fi
+    if [ $# -lt 1 ]; then
+        echo "Error: Image file not specified."
+        echo "Usage: $0 <image_file> [password] [wordlist.txt]"
+        exit 1
+    fi
 
-	if [ $? -eq 0 ]; then
-		echo "Data extracted successfully using outguess."
-		return 0
-	else
-		if [ -n "$password" ]; then
-			echo "Data extraction using outguess with the provided password also unsuccessful."
-		fi
-		return 1
-	fi
+    local image_file="$1"
+    local password="$2"
+    local wordlist_file="$3"
+
+    install_command "steghide"
+    install_command "outguess"
+    install_command "stegseek"
+    install_command "binwalk"
+
+    if [ -n "$password" ]; then
+        extract_data steghide -sf "$image_file" -p "$password" || extract_data outguess -k "$password" -r "$image_file" output.txt
+    else
+        extract_data outguess -r "$image_file" output.txt
+    fi
+
+    if [ "${image_file##*.}" == "jpg" ] && [ -n "$wordlist_file" ]; then
+        extract_data stegseek "$image_file" "$wordlist_file"
+    fi
+
+    extract_data binwalk --run-as=root --extract --matryoshka --directory=tmp_binwalk_extraction "$image_file"
+    
+    read -p "Do you want to remove the temporary extraction directory (tmp_binwalk_extraction)? [y/N] " response
+    if [[ "$response" =~ ^[Yy]$ ]]; then
+        rm -rf tmp_binwalk_extraction
+        echo "Temporary directory removed."
+    fi
 }
 
-extract_data_with_stegseek() {
-	local image_file="$1"
-	local wordlist_file="$2"
-
-	if [ "${image_file##*.}" == "jpg" ] && [ -n "$wordlist_file" ]; then
-		stegseek "$image_file" "$wordlist_file"
-	else
-		echo "Wordlist not provided or image is not a jpg. Skipping stegseek."
-		return 1
-	fi
-
-	if [ $? -eq 0 ]; then
-		echo "Data extracted successfully using stegseek."
-		return 0
-	else
-		echo "Data extraction using stegseek unsuccessful."
-		return 1
-	fi
-}
-
-if [[ "$1" == "-h" || "$1" == "--help" ]]; then
-	echo "Usage: $0 <image_file> [password] [wordlist.txt]"
-	exit 0
-fi
-
-if [ $# -lt 1 ]; then
-	echo "Usage: $0 <image_file> [password] [wordlist.txt]"
-	exit 1
-fi
-
-image_file="$1"
-password="$2"
-wordlist_file="$3"
-
-install_command "steghide"
-install_command "stegseek"
-
-if [ -n "$password" ]; then
-	echo "Extracting data using steghide..."
-	extract_data_with_steghide "$image_file" "$password"
-	if [ $? -ne 0 ]; then
-		echo "Data extraction using steghide unsuccessful."
-	fi
-else
-	echo "Password not provided. Trying outguess..."
-	install_command "outguess"
-
-	extract_data_with_outguess "$image_file" "$password"
-	if [ $? -ne 0 ]; then
-		echo "Data extraction using outguess unsuccessful."
-	fi
-fi
-
-echo "Trying stegseek..."
-extract_data_with_stegseek "$image_file" "$wordlist_file"
-if [ $? -ne 0 ]; then
-	echo "Data extraction using stegseek unsuccessful."
-fi
+main "$@"

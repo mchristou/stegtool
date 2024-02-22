@@ -11,6 +11,11 @@ and install them if they are missing. You do not need to manually install them.
 - [Steghide](http://steghide.sourceforge.net/)
 - [Outguess](https://github.com/outguess/outguess)
 - [Stegseek](https://github.com/RickdeJager/stegseek)
+- [Binwalk](https://github.com/ReFirmLabs/binwal)
+
+#### NOTE:
+This tool was developed and tested on a Debian distribution of Linux.
+Tools will be automatically installed if the environment is a Debian distro.
 
 ## Usage
 
@@ -23,20 +28,10 @@ and install them if they are missing. You do not need to manually install them.
 
 ## Examples 
 
-1. Extracting data using steghide:
-```
-./extract_data.sh image.jpg mypassword
-```
-
-2. Extracting data using outguess:
-```
-./extract_data.sh image.jpg mypassword
-```
-
-3. Extracting data using stegseek:
 ```
 ./extract_data.sh image.jpg '' wordlist.txt
 ```
+
 ## Project Status
 This project is still ongoing.
 
