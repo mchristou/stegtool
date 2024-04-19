@@ -14,6 +14,7 @@ and install them if they are missing. You do not need to manually install them.
 - [Binwalk](https://github.com/ReFirmLabs/binwal)
 
 #### NOTE:
+
 This tool was developed and tested on a Debian distribution of Linux.
 Tools will be automatically installed if the environment is a Debian distro.
 
@@ -22,18 +23,21 @@ Tools will be automatically installed if the environment is a Debian distro.
 ```
 ./stegtool.sh <image_file> [password] [wordlist.txt]
 ```
+
 <image_file>: Path to the image file from which data will be extracted.<br>
 [password]: Optional password for extracting data using steghide and outguess.<br>
 [wordlist.txt]: Optional wordlist file for extracting data using stegseek. Required only when using stegseek.<br>
 
-## Examples 
+## Examples
 
 ```
-./extract_data.sh image.jpg '' wordlist.txt
+./stegtool.sh image.jpg '' wordlist.txt
 ```
 
 ## Project Status
+
 This project is still ongoing.
 
 ## License
+
 The code in this project is licensed under MIT license.

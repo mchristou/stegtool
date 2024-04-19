@@ -60,7 +60,7 @@ main() {
     install_command "binwalk"
 
     if [ -n "$password" ]; then
-        extract_data steghide -sf "$image_file" -p "$password" || extract_data outguess -k "$password" -r "$image_file" output.txt
+        extract_data steghide extract -sf "$image_file" -p "$password" || extract_data outguess -k "$password" -r "$image_file" output.txt
     else
         extract_data outguess -r "$image_file" output.txt
     fi
