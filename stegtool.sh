@@ -31,7 +31,7 @@ extract_data() {
     echo "Attempting data extraction with $tool..."
     if "$tool" "${args[@]}"; then
         echo "Data extracted successfully using $tool."
-        return 0
+        exit 0
     else
         echo "Data extraction with $tool failed."
         return 1
