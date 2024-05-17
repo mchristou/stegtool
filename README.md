@@ -1,7 +1,7 @@
 # Steganography Data Extractor
 
-This script allows you to extract hidden data from image files using
-steganography tools like Steghide and Outguess.
+This script allows you to extract general information and hidden data 
+from image files using steganography tools.
 
 ## Prerequisites
 
@@ -12,6 +12,7 @@ and install them if they are missing. You do not need to manually install them.
 - [Outguess](https://github.com/outguess/outguess)
 - [Stegseek](https://github.com/RickdeJager/stegseek)
 - [Binwalk](https://github.com/ReFirmLabs/binwal)
+- [Exiftool](https://github.com/exiftool/exiftool)
 
 #### NOTE:
 
@@ -25,18 +26,14 @@ Tools will be automatically installed if the environment is a Debian distro.
 ```
 
 <image_file>: Path to the image file from which data will be extracted.<br>
-[password]: Optional password for extracting data using steghide and outguess.<br>
-[wordlist.txt]: Optional wordlist file for extracting data using stegseek. Required only when using stegseek.<br>
+[password]: Optional password for extracting embedded files.<br>
+[wordlist.txt]: Optional wordlist file for extracting embedded files using stegseek. Required only when using stegseek.<br>
 
 ## Examples
 
 ```
 ./stegtool.sh image.jpg '' wordlist.txt
 ```
-
-## Project Status
-
-This project is still ongoing.
 
 ## License
 
