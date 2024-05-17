@@ -31,10 +31,8 @@ extract_data() {
     echo "Attempting data extraction with $tool..."
     if "$tool" "${args[@]}"; then
         echo "Data extracted successfully using $tool."
-        exit 0
     else
         echo "Data extraction with $tool failed."
-        return 1
     fi
 }
 
@@ -53,29 +51,40 @@ main() {
     local image_file="$1"
     local password="$2"
     local wordlist_file="$3"
+    local output_dir="${image_file%.*}_results"
+    echo $output_dir
+
+    mkdir $output_dir
+    cp $image_file $output_dir
+    cd $output_dir
 
     install_command "steghide"
     install_command "outguess"
     install_command "stegseek"
     install_command "binwalk"
+    install_command "exiftool"
+
+    exiftool $image_file >> exiftool.output
+    strings -n 6 $image_file >> strings.output
+    file $image_file >> file.output
 
     if [ -n "$password" ]; then
-        extract_data steghide extract -sf "$image_file" -p "$password" || extract_data outguess -k "$password" -r "$image_file" output.txt
+        extract_data steghide extract -sf "$image_file" -p "$password"
+       	extract_data outguess -k "$password" -r "$image_file" outguess.output
     else
         extract_data outguess -r "$image_file" output.txt
     fi
 
-    if [ "${image_file##*.}" == "jpg" ] && [ -n "$wordlist_file" ]; then
-        extract_data stegseek "$image_file" "$wordlist_file"
+    if [ "${image_file##*.}" == "jpg" ]; then 
+	    if [ -n "$wordlist_file" ]; then
+        	extract_data stegseek "$image_file" "$wordlist_file"
+    	    else
+	        local rockyou_path=$(find / -name "rockyou.txt" 2>/dev/null -print -quit)
+        	extract_data stegseek "$image_file" "$rockyou_path"
+	    fi
     fi
 
     extract_data binwalk --run-as=root --extract --matryoshka --directory=tmp_binwalk_extraction "$image_file"
-    
-    read -p "Do you want to remove the temporary extraction directory (tmp_binwalk_extraction)? [y/N] " response
-    if [[ "$response" =~ ^[Yy]$ ]]; then
-        rm -rf tmp_binwalk_extraction
-        echo "Temporary directory removed."
-    fi
 }
 
 main "$@"
